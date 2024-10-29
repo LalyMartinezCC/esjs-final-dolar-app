@@ -1,22 +1,58 @@
-importar { Terminal } desde '@es-js/terminal'
+importar { Terminal } desde "@es-js/terminal";
+importar { obtenerJson } desde "https://desarrollo-aplicaciones.vercel.app/2024/code/obtener-json.js";
+importar { validarSecreto } desde "https://desarrollo-aplicaciones.vercel.app/2024/code/validar-secreto.js";
+importar { format, parseISO } desde "npm/date-fns/+esm";
+
+const DNI = "33339046"; // Ingresa tu DNI aquí 👈
 
 asincrono funcion inicio() {
-	Terminal.limpiar()
+  mientras (verdadero) {
+    Terminal.escribir("Hola! Ingresa la palabra secreta:");
+    const secreto = esperar Terminal.leer();
 
-	Terminal.escribir('Ingresa un valor:')
+    si (esperar validarSecreto(DNI, secreto)) {
+      mostrarConfeti();  // Llamada a la nueva función
+      esperar mostrarCotizacion();
+    } sino {
+      Terminal.escribir("Palabra secreta inválida");
+    }
 
-	const resultado = esperar Terminal.leer()
-
-	Terminal.escribir({
-		Resultado: resultado,
-		Tipo: tipoDe resultado,
-	})
-
-	Terminal.escribir('Presiona ENTER para volver a iniciar')
-
-	esperar Terminal.leerEnter()
-
-	esperar inicio()
+    Terminal.escribir("Presiona ENTER para volver a ingresar o CTRL+C para salir.");
+    esperar Terminal.leerEnter();
+    Terminal.limpiar();
+  }
 }
 
-inicio()
+funcion mostrarConfeti() {
+  Terminal.escribir("🎉🎉 ¡Felicidades! 🎉🎉");
+  Terminal.escribir("✨ Has ingresado la palabra secreta correcta. ✨");
+  Terminal.escribir("💵 A continuación, te proporcionamos el detalle de la cotización del dólar blue, incluyendo su precio de venta, precio de compra y el promedio. 💵");
+}
+
+asincrono funcion mostrarCotizacion() {
+  const cotizacion = esperar obtenerJson("https://dolarapi.com/v1/dolares/blue");
+
+  si (cotizacion) {
+    const { venta, compra, fechaActualizacion } = cotizacion;
+    const promedio = (venta + compra) / 2;
+
+    // Verificamos que `fechaActualizacion` esté definida y en formato ISO antes de formatear
+    mut fechaFormateada = "Fecha no disponible";
+    si (fechaActualizacion) {
+      intentar {
+        fechaFormateada = format(parseISO(fechaActualizacion), "dd/MM/yyyy");
+      } capturar (error) {
+        consola.error("Error al formatear la fecha:", error);
+      }
+    }
+
+    Terminal.escribir(`Cotización del Dólar Blue (${fechaFormateada}):`);
+    Terminal.escribir(`- Precio de venta: $${venta}`);
+    Terminal.escribir(`- Precio de compra: $${compra}`);
+    Terminal.escribir(`- Promedio: $${promedio.fijarDecimales(2)}`);
+  } sino {
+    Terminal.escribir("No se pudo obtener la cotización");
+  }
+}
+
+inicio();
